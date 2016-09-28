@@ -1,2 +1,2 @@
-# linked_list_primes
-Uses linked lists to generate prime numbers up to a max limit
+# Prime Number Generator
+Uses linked lists to generate prime numbers up to a max limit set in the code.
