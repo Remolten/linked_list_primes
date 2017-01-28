@@ -3,106 +3,102 @@
 
 typedef unsigned long long int ulli;
 
-// Save typing time
-using namespace std;
+using std::cout;
+using std::endl;
 
-// Structure for a linked list object
-struct LinkedList
+// Object representing a single link in a linked list
+struct Link
 {
     ulli value;
-    LinkedList *next;
+    Link *next;
 
-    // Initialize the first link
-    LinkedList(ulli _value)
+    Link( ulli _value )
     {
         value = _value;
-        next = nullptr;
-    }
-
-    // Triggers the deletion of all links when the first one is deleted
-    ~LinkedList()
-    {
-      cout << next->value << endl;
-      delete next;
     }
 };
 
-// Declare the prime checkings function to it is within scope for the main function
+// Object representing a linked list object
+struct LinkedList
+{
+    Link *head;
+
+    // All links are deleted when 'delete' is called on this object
+    ~LinkedList()
+    {
+        Link *next;
+
+        while ( head->next != nullptr )
+        {
+            next = head->next;
+            delete head;
+            head = next;
+        }
+    }
+};
+
+// Function pointer to reduce the amount of calls to retrieve sqrt from cmath
+double (*sqrt_global)(double) = sqrt;
 unsigned short is_prime(ulli, LinkedList*);
 
-// Creates a global variable containing the sqrt function to reduce the amount of calls to cmath for the sqrt function
-double (*sqrt_global)(double) = sqrt;
-
-// Do our calculations
 int main()
 {
     // Sets the max limit of the prime checker
     const ulli max_limit = 20000000;
 
-    // Keeps track of how many primes we have
+    // Count of the total amount of primes 
     ulli primes_ct = 0;
 
-    // Create the first link of the linked list
-    LinkedList *first_prime = new LinkedList(3);
+    LinkedList* linked_list = new LinkedList();
 
-    // Create the last link of the linked list (will constantly change)
-    LinkedList *last_prime = new LinkedList(5);
+    Link *first_link = new Link( 3 );
+    linked_list->head = first_link;
 
-    // Give first_prime.next a reference to our current last_prime
-    first_prime->next = last_prime;
+    Link *last_prime = new Link( 5 );
+    first_link->next = last_prime;
 
-    // Create an intermediary when creating a new last_prime
-    LinkedList *old_last_prime = last_prime;
+    // Add 3 to the counter because 2, 3, and 5 are prime
+    primes_ct += 3;
 
-	// Add 3 to counter because 2, 3, and 5 are prime
-	primes_ct += 3;
-
-	// Iterate over all odd numbers from 7 to max_limit and check if they are prime
-	// Utilize the list of already known primes to speed up calculations
-	for (ulli i = 7; i < max_limit + 1; i += 2)
-	{
-        // Discard all numbers ending in 5 because they are not prime
-        // Then check if number is prime
-        if (i % 5 != 0 && is_prime(i, first_prime))
+    // Iterate over all odd numbers from 7 to max_limit and check if they are prime
+    // Utilize the list of already known primes to speed up calculations
+    for (ulli i = 7; i < max_limit + 1; i += 2)
+    {
+        // Do not check any numbers ending in 5 because they are not prime
+        // Otherwise, check if the number is prime
+        if (i % 5 != 0 && is_prime(i, linked_list))
         {
-            old_last_prime = last_prime;
-            last_prime = new LinkedList(i);
-            old_last_prime->next = last_prime;
+            last_prime->next = new Link( i );
+            last_prime = last_prime->next;
             primes_ct++;
         }
-	}
+    }
 
-	// Print the number of primes to cout
-  cout << primes_ct << endl;
+    cout << primes_ct << endl;
 
-  // Start the link deletion process
-  delete first_prime;
-
-	return 0;
+    return 0;
 }
 
 // Checks if a single number is prime
-unsigned short is_prime(ulli num, LinkedList *first_prime_link)
+unsigned short is_prime(ulli num, LinkedList *linked_list)
 {
-	// Precalculate the sqrt of number before doing the for loop to increase efficiency
-	ulli root = sqrt_global(num);
+    // Precalculate the sqrt of number before doing the for loop to increase efficiency
+    ulli root = sqrt_global(num);
 
-  // Create a pointer to the first link
-  LinkedList *link = first_prime_link;
+    Link *link = linked_list->head;
 
-  // Iterate over linked list with a while loop until we reach the end
-  while (link->value <= root)
-  {
-      // Number is not prime if it is divisble by another prime
-      if (num % link->value == 0)
-      {
-          return 0;
-      }
+    // Iterate until reaching the sqrt of the number (guarantees primeness) 
+    while (link->value <= root)
+    {
+        // A number is not prime if it is divisble by another prime
+        if (num % link->value == 0)
+        {
+            return 0;
+        }
 
-      // Get the next link from the list
-      link = link->next;
-  }
+        link = link->next;
+    }
 
-	// The number has been proven prime if the primes from the divisor list exceeds the square root
-	return 1;
+    // The number has been proven prime if the primes from the divisor list exceed the square root
+    return 1;
 }
